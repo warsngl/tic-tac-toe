@@ -1,3 +1,20 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.b {
+  @apply bg-sec border border-sec shadow-xl rounded px-3 text-pri
+}
+.fc {
+  @apply flex justify-center items-center cursor-pointer;
+}
+#app {
+  min-width: 100vw;
+  min-height: 100vh;
+  padding: 20px;
+  @apply bg-pri
+}
+html{
+  font-family: 'Neucha', cursive;
+  @apply text-sec text-xl
+}

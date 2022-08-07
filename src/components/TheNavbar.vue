@@ -1,22 +1,15 @@
 <template lang='pug'>
-ul.navbar
-  li
-    router-link(to='/') Home
-  li
-    router-link(to='/about') About
+.fc.h-6
+  router-link.mr-10.b(to='/lobby') Lobby
+  router-link.b(to='/rating') Rating
 </template>
 
 <script>
-export default {
 
-}
 </script>
 
 <style>
-.navbar{
-  @apply flex justify-around
-}
-.router-link-exact-active{
+.router-link-exact-active {
   text-decoration: underline;
 }
 </style>

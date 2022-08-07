@@ -4,12 +4,17 @@ import { createRouter,createWebHashHistory } from 'vue-router'
 import store from './store'
 import App from './App.vue'
 import './assets/index.css'
-import Home from './components/Home.vue'
-import About from './components/About.vue'
+import Game from './components/Game.vue'
+import Blank from './components/Blank.vue'
+import Rating from './components/Rating.vue'
+import Lobby from './components/Lobby.vue'
 
 const routes=[
-  {path:'/', component: Home},
-  {path:'/about', component: About},
+  {path:'/', component: Blank},
+  {path:'/id/:game', component: Game},
+  {path:'/rating', component: Rating},
+  {path:'/lobby', component: Lobby},
+
 ]
 const router = createRouter({
   history: createWebHashHistory(),
