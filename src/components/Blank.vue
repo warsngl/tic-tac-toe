@@ -1,14 +1,15 @@
 <template lang="pug">
 input.mb-3.pl-2(v-model="name", ref="userName")
-button.b(@click="auth", @keydown.enter="auth") Start Game
+button.b(@click="auth", @keydown.enter="auth") {{text('startGame')}}
 </template>
 
 <script>
 // import {db} from '../config'
 // import {ref,get} from 'firebase/database'
 import user from "../mixins/user";
+import text from "../mixins/text";
 export default {
-  mixins: [user],
+  mixins: [user, text],
   data: () => ({
     name: "",
   }),
