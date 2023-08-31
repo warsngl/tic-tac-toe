@@ -1,11 +1,14 @@
-<template lang='pug'>
+<template lang="pug">
 .fc.h-6
-  router-link.mr-10.b(to='/lobby') Lobby
-  router-link.b(to='/rating') Rating
+  router-link.mr-10.b(to='/lobby') {{text('lobby')}}
+  router-link.b(to='/rating') {{text('rating')}}
 </template>
 
 <script>
-
+import text from "../mixins/text";
+export default {
+  mixins: [text],
+};
 </script>
 
 <style>

@@ -5,6 +5,9 @@
 .b {
   @apply bg-sec border border-sec shadow-xl rounded px-3 text-pri
 }
+.bot-active{
+  box-shadow: 0px 0px 11px 8px rgba(45,255,196,0.9);
+}
 .fc {
   @apply flex justify-center items-center cursor-pointer;
 }

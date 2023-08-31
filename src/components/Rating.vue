@@ -7,7 +7,7 @@ ul
 export default {
   props: {},
   data: () => ({
-    i: ["God", "Dog", "Godzilla","God", "Dog", "Godzilla","God", "Dog", "Godzilla"],
+    i: ["---",],
   }),
   methods: {},
   computed: {},

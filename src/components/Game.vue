@@ -1,8 +1,9 @@
-<template lang='pug'>
+<template lang="pug">
 span {{winner}}
 span
-  button.b(@click="refresh" :disabled='!isHost') Again
-p {{ turn=='o'?'Turn O':'Turn X' }}
+  button.b(@click="refresh" :disabled='!isHost') {{text('again')}}
+  button.b.ml-2(@click="bot=!bot" :disabled='!isHost' :class="{'bot-active':bot}") С ботом
+p {{ text('turn')}} {{turn=='o'?'O':'X' }}
 .fc.mt-6
   .rounded.pb-2.leading-3.text-pri(
     class='-ml-10',
@@ -38,142 +39,164 @@ p O: {{ o?.filter(o=>o!=0) }}
 </template>
 
 <script>
-import {get,ref,update,remove,onValue} from 'firebase/database'
-import {db} from '../config'
-import user from '../mixins/user'
+import { get, ref, update, remove, onValue } from "firebase/database";
+import { db } from "../config";
+import user from "../mixins/user";
+import text from "../mixins/text";
+import bot from "../mixins/bot";
 export default {
-  mixins:[user],
+  mixins: [user, text,bot],
   data: () => ({
-    isHost:false,
-    url:'',
-    initialX:[1, 1, 3, 3, 6, 6],
-    initialO:[1, 1, 3, 3, 6, 6],
+    isHost: false,
+    url: "",
+    initialX: [1, 1, 3, 3, 6, 6],
+    initialO: [1, 1, 3, 3, 6, 6],
     initialZ: [
-      { s: '.', v: 0 },
-      { s: '.', v: 0 },
-      { s: '.', v: 0 },
-      { s: '.', v: 0 },
-      { s: '.', v: 0 },
-      { s: '.', v: 0 },
-      { s: '.', v: 0 },
-      { s: '.', v: 0 },
-      { s: '.', v: 0 },
+      { s: ".", v: 0 },
+      { s: ".", v: 0 },
+      { s: ".", v: 0 },
+      { s: ".", v: 0 },
+      { s: ".", v: 0 },
+      { s: ".", v: 0 },
+      { s: ".", v: 0 },
+      { s: ".", v: 0 },
+      { s: ".", v: 0 },
     ],
     //TODO set any initialO and initialX to change game rule
     xx: 0,
     oo: 0,
-    game:{},
+    game: {},
+    bot:false,
   }),
-  watch:{
-    
-  },
+  watch: {},
   computed: {
-    winner:{
-      get(){
-        return this.game?.winner??''
+    winner: {
+      get() {
+        return this.game?.winner ? this.text('winner')+" "+this.game.winner:"";
       },
-      set(val){
-        update(ref(db,'/'+this.url),{winner:val})
-      }
-    },
-    gameURL(){
-      return this.$route.params.game
-    },
-    turn:{
-      get(){
-        return this.game.turn=='o'?'o':"x"
+      set(val) {
+        update(ref(db, "/" + this.url), { winner: val });
       },
-      set(val){
-        update(ref(db,'/'+this.url),{turn:val})
-      }
     },
-    z(){
-      return this.game?.z?.map(z=>z.s!='.'?{s:z.s,v:z.v}:{s:[],v:z.v})
+    gameURL() {
+      return this.$route.params.game;
     },
-    x(){
-      return this.game?.x?.map(x=>x)
+    turn: {
+      get() {
+        return this.game.turn == "o" ? "o" : "x";
+      },
+      set(val) {
+        update(ref(db, "/" + this.url), { turn: val });
+      },
     },
-    o(){
-      return this.game?.o?.map(o=>o)
+    z() {
+      return this.game?.z?.map((z) =>
+        z.s != "." ? { s: z.s, v: z.v } : { s: [], v: z.v }
+      );
+    },
+    x() {
+      return this.game?.x?.map((x) => x);
+    },
+    o() {
+      return this.game?.o?.map((o) => o);
     },
   },
   methods: {
     set(i) {
-      (this.turn == 'o')?this.setO(i):this.setX(i)
+      this.turn == "o" ? this.setO(i) : this.setX(i);
     },
     setX(i) {
-      if (this.z[i].v < this.xx) {
-        update(ref(db,'/'+this.url+'/z/'+i), {s:'x',v:this.xx})
-        this.checkWin().then(resolve=>{
-          this.winner=this.turn=='o'?'Winner O':'Winner X'
-          this.refresh()
-        },
-        reject=>{
-          this.turn='o'
-          let index=this.x.indexOf(this.xx)
-          update(ref(db,'/'+this.url+'/x/'), {[index]:0})
-          this.xx=0
-        })
-      }
+      return new Promise((resolve, reject) =>{
+        if (this.z[i].v < this.xx) {
+          update(ref(db, "/" + this.url + "/z/" + i), { s: "x", v: this.xx });
+          this.checkWin().then(
+            (resolve) => {
+              this.winner =this.turn == "o" ? "O" : "X";
+              this.refresh();
+            },
+            (reject) => {
+              this.turn = "o";
+              let index = this.x.indexOf(this.xx);
+              update(ref(db, "/" + this.url + "/x/"), { [index]: 0 });
+              this.xx = 0;
+            }
+          );
+          resolve()
+        }else reject()
+      })
     },
     setO(i) {
       if (this.z[i].v < this.oo) {
-        update(ref(db,'/'+this.url+'/z/'+i), {s:'o',v:this.oo})
-        this.checkWin().then(resolve=>{
-          this.winner=this.turn=='o'?'Winner O':'Winner X'
-          this.refresh()
-        },
-        reject=>{
-          this.turn='x'
-          let index=this.o.indexOf(this.oo)
-          update(ref(db,'/'+this.url+'/o/'), {[index]:0})
-          this.oo=0
-        })
+        update(ref(db, "/" + this.url + "/z/" + i), { s: "o", v: this.oo });
+        this.checkWin().then(
+          (resolve) => {
+            this.winner = this.turn == "o" ? "O" : "X";
+            this.refresh();
+          },
+          (reject) => {
+            this.turn = "x";
+            let index = this.o.indexOf(this.oo);
+            update(ref(db, "/" + this.url + "/o/"), { [index]: 0 });
+            this.oo = 0;
+          }
+        );
+        if(this.bot) this.botTurn()
       }
     },
     pickX(i) {
-      (this.turn=='x') && (this.xx = i)
+      this.turn == "x" && (this.xx = i);
     },
     pickO(i) {
-      (this.turn=='o') && (this.oo = i)
+      this.turn == "o" && (this.oo = i);
     },
     refresh() {
-      let initialGame={z:this.initialZ,x:this.initialX,o:this.initialO}
-      Math.random() > 0.5
-        ? update(ref(db,'/'+this.url),{...initialGame,turn:'x'})
-        : update(ref(db,'/'+this.url),{...initialGame,turn:'o'})
+      let initialGame = {
+        z: this.initialZ,
+        x: this.initialX,
+        o: this.initialO,
+      };
+      if(!this.bot){
+        Math.random() > 0.5
+        ? update(ref(db, "/" + this.url), { ...initialGame, turn: "x" })
+        : update(ref(db, "/" + this.url), { ...initialGame, turn: "o" });
+      }else{
+        update(ref(db, "/" + this.url), { ...initialGame, turn: "o" });
+      }
     },
-    checkWin(){
-      return new Promise((resolve, reject)=>{
-        if(this.z[0].s==[]&&this.z[4].s==[]&&this.z[8].s==[]) reject()
-        if((this.z[0].s == this.z[1].s && this.z[1].s == this.z[2].s) ||
-        (this.z[3].s == this.z[4].s && this.z[4].s == this.z[5].s) ||
-        (this.z[6].s == this.z[7].s && this.z[7].s == this.z[8].s) ||
-        (this.z[0].s == this.z[3].s && this.z[3].s == this.z[6].s) ||
-        (this.z[1].s == this.z[4].s && this.z[4].s == this.z[7].s) ||
-        (this.z[2].s == this.z[5].s && this.z[5].s == this.z[8].s) ||
-        (this.z[0].s == this.z[4].s && this.z[4].s == this.z[8].s) ||
-        (this.z[2].s == this.z[4].s && this.z[4].s == this.z[6].s)){
-          resolve()
-        }else{reject()}
-      })
-    }
+    checkWin() {
+      return new Promise((resolve, reject) => {
+        if (this.z[0].s == [] && this.z[4].s == [] && this.z[8].s == [])
+          reject();
+        if (
+          (this.z[0].s == this.z[1].s && this.z[1].s == this.z[2].s) ||
+          (this.z[3].s == this.z[4].s && this.z[4].s == this.z[5].s) ||
+          (this.z[6].s == this.z[7].s && this.z[7].s == this.z[8].s) ||
+          (this.z[0].s == this.z[3].s && this.z[3].s == this.z[6].s) ||
+          (this.z[1].s == this.z[4].s && this.z[4].s == this.z[7].s) ||
+          (this.z[2].s == this.z[5].s && this.z[5].s == this.z[8].s) ||
+          (this.z[0].s == this.z[4].s && this.z[4].s == this.z[8].s) ||
+          (this.z[2].s == this.z[4].s && this.z[4].s == this.z[6].s)
+        ) {
+          resolve();
+        } else {
+          reject();
+        }
+      });
+    },
   },
   created() {
-    this.url=this.$route.params.game
-    get(ref(db,this.url)).then(snap=>{
-      let {host}=snap.val()
-      this.isHost=(host==this.user)
-      this.refresh()
-      onValue(ref(db,'/'+this.gameURL),snap=>this.game=snap.val())
-    })
+    this.url = this.$route.params.game;
+    get(ref(db, this.url)).then((snap) => {
+      let { host } = snap.val();
+      this.isHost = host == this.user;
+      this.refresh();
+      onValue(ref(db, "/" + this.gameURL), (snap) => (this.game = snap.val()));
+    });
   },
-  beforeUnmount(){
-    this.$store.dispatch('kick',this.url)
+  beforeUnmount() {
+    this.$store.dispatch("kick", this.url);
   },
 };
 </script>
 
-<style>
-
-</style>
+<style></style>
